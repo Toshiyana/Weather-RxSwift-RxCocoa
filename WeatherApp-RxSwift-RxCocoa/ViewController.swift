@@ -62,9 +62,19 @@ class ViewController: UIViewController {
         let resource = Resource<WeatherResult>(url: url)
         
         // Pattern 1 of binding way using driver
+        // Including error handling
         let search = URLRequest.load(resource: resource) // search as an observable
             .observe(on: MainScheduler.instance)
-            .asDriver(onErrorJustReturn: WeatherResult.empty)
+            .retry(3) // Retry getting information by requesting url (in this case, retry 3 times. <- Don't retry infinite times for the performance)
+            .catch { error in
+                print(error.localizedDescription)
+                return Observable.just(WeatherResult.empty)
+            }.asDriver(onErrorJustReturn: WeatherResult.empty)
+        
+        // Not including error handling
+//        let search = URLRequest.load(resource: resource) // search as an observable
+//            .observe(on: MainScheduler.instance)
+//            .asDriver(onErrorJustReturn: WeatherResult.empty)
         
         search.map { "\($0.main.temp) ℃" } // Producer
         .drive(temperatureLabel.rx.text) // Receiver
