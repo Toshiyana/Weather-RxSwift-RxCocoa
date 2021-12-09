@@ -20,7 +20,11 @@ class ViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        cityNameTextField.rx.value
+        // One single request to api
+        // .editingDidEndOnExit: When the keyboard goes away by pressing return key (<- end editing)
+        cityNameTextField.rx.controlEvent(.editingDidEndOnExit)
+            .asObservable()
+            .map { self.cityNameTextField.text }
             .subscribe(onNext: { [weak self] city in
                 
                 if let city = city {
@@ -31,6 +35,21 @@ class ViewController: UIViewController {
                     }
                 }
             }).disposed(by: disposeBag)
+        
+        // Use the above code. (<- One single request)
+        // Don't use the below code.(<- Too many request)
+        // Request every time that textField.text was changed
+//        cityNameTextField.rx.value
+//            .subscribe(onNext: { [weak self] city in
+//
+//                if let city = city {
+//                    if city.isEmpty {
+//                        self?.displayWeather(nil)
+//                    } else {
+//                        self?.fetchWeather(by: city)
+//                    }
+//                }
+//            }).disposed(by: disposeBag)
     }
     
     private func fetchWeather(by city: String) {
