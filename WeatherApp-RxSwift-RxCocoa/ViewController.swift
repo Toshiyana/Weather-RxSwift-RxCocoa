@@ -26,7 +26,7 @@ class ViewController: UIViewController {
             .asObservable()
             .map { self.cityNameTextField.text }
             .subscribe(onNext: { [weak self] city in
-                
+
                 if let city = city {
                     if city.isEmpty {
                         self?.displayWeather(nil)
@@ -61,17 +61,45 @@ class ViewController: UIViewController {
         
         let resource = Resource<WeatherResult>(url: url)
         
-        URLRequest.load(resource: resource)
-            .observe(on: MainScheduler.instance) // To update UI, implement on main thread. (easier way than DispatchQueue.main.async {})
-            .catchAndReturn(WeatherResult.empty)
-            .subscribe(onNext: { [weak self] result in
-                
-                print(result)
-                
-                let weather = result.main
-                self?.displayWeather(weather)
-                
-            }).disposed(by: disposeBag)
+        // Pattern 1 of binding way using driver
+        let search = URLRequest.load(resource: resource) // search as an observable
+            .observe(on: MainScheduler.instance)
+            .asDriver(onErrorJustReturn: WeatherResult.empty)
+        
+        search.map { "\($0.main.temp) ℃" } // Producer
+        .drive(temperatureLabel.rx.text) // Receiver
+        .disposed(by: disposeBag)
+        
+        search.map { "\($0.main.humidity) 💦"} // Producer
+        .drive(humidityLabel.rx.text) // Receiver
+        .disposed(by: disposeBag)
+        
+        // Pattern 2 of binding way using bind
+        // Display data using binding observables
+//        let search = URLRequest.load(resource: resource) // search as an observable
+//            .observe(on: MainScheduler.instance)
+//            .catchAndReturn(WeatherResult.empty)
+//
+//        search.map { "\($0.main.temp) ℃" } // Producer
+//        .bind(to: temperatureLabel.rx.text) // Receiver
+//        .disposed(by: disposeBag)
+//
+//        search.map { "\($0.main.humidity) 💦"} // Producer
+//        .bind(to: humidityLabel.rx.text) // Receiver
+//        .disposed(by: disposeBag)
+        
+        // Pattern 3 of binding way (not simple)
+//        URLRequest.load(resource: resource)
+//            .observe(on: MainScheduler.instance) // To update UI, implement on main thread. (easier way than DispatchQueue.main.async {})
+//            .catchAndReturn(WeatherResult.empty)
+//            .subscribe(onNext: { [weak self] result in
+//
+//                print(result)
+//
+//                let weather = result.main
+//                self?.displayWeather(weather)
+//
+//            }).disposed(by: disposeBag)
     }
     
     private func displayWeather(_ weather: Weather?) {
