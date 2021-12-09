@@ -6,3 +6,7 @@
 //
 
 import Foundation
+
+struct T {
+    static let weatherAPIKey = "bb091df4e5beb718f2d5e607adc535ca"
+}

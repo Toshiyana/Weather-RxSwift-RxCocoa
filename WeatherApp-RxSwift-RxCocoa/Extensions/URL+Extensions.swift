@@ -6,3 +6,14 @@
 //
 
 import Foundation
+
+extension URL {
+    
+    static func urlForWeatherAPI(city: String) -> URL? {
+        // two kinds of units
+        // units=metric (Celsius)
+        // units=imperial (Fahrenheit)
+        return URL(string: "https://api.openweathermap.org/data/2.5/weather?q=\(city)&appid=\(T.weatherAPIKey)&units=metric")
+    }
+    
+}
